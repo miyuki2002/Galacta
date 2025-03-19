@@ -16,7 +16,8 @@ module.exports = {
                     { name: 'Diamond', value: 'DIAMOND' },
                     { name: 'Grandmaster', value: 'GRANDMASTER' },
                     { name: 'Celestial', value: 'CELESTIAL' },
-                    { name: 'Eternity', value: 'ETERNITY' }
+                    { name: 'Eternity', value: 'ETERNITY' },
+                    { name: 'One Above All', value: 'ONE ABOVE ALL' }
                 ))
         .addStringOption(option =>
             option.setName('msg')
@@ -73,6 +74,9 @@ module.exports = {
                 break;
             case 'ETERNITY':
                 rankThumbnail = 'https://example.com/eternity_icon.png';
+                break;
+            case 'ONE ABOVE ALL':
+                rankThumbnail = 'https://example.com/one_above_all_icon.png';
                 break;
             default:
                 rankThumbnail = 'https://example.com/default_icon.png';
