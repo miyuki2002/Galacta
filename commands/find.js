@@ -20,14 +20,14 @@ module.exports = {
                     { name: 'One Above All', value: 'ONE ABOVE ALL' }
                 ))
         .addStringOption(option =>
-            option.setName('msg')
+            option.setName('message')
                 .setDescription('Your message to potential teammates')
                 .setRequired(true)),
 
     async execute(interaction) {
         // Get the options from the interaction
         const rank = interaction.options.getString('rank');
-        const message = interaction.options.getString('msg');
+        const message = interaction.options.getString('message');
 
         // Check if user is in a voice channel
         const member = interaction.member;
