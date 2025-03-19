@@ -44,7 +44,7 @@ module.exports = {
 
         // Count members in voice channel for slots
         const membersInChannel = member.voice.channel.members.size;
-        const maxSlots = 5; // Assuming 5 is the max team size
+        const maxSlots = 5; // Assuming 5 is the max team size - maybe not
         const slots = `${membersInChannel}/${maxSlots}`;
 
 
