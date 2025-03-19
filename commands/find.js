@@ -49,38 +49,38 @@ module.exports = {
 
 
         // Get rank thumbnail based on rank
-        // https://imgur.com/a/mOFVcqM
+        // https://i.imgur.com/a/mOFVcqM
         let rankThumbnail;
         switch(rank) {
             case 'BRONZE':
-                rankThumbnail = 'https://imgur.com/ubB6IuL';
+                rankThumbnail = 'https://i.imgur.com/ubB6IuL.png';
                 break;
             case 'SILVER':
-                rankThumbnail = 'https://imgur.com/YVsXLXC';
+                rankThumbnail = 'https://i.imgur.com/YVsXLXC.png';
                 break;
             case 'GOLD':
-                rankThumbnail = 'https://imgur.com/pE989Hf';
+                rankThumbnail = 'https://i.imgur.com/pE989Hf.png';
                 break;
             case 'PLATINUM':
-                rankThumbnail = 'https://imgur.com/7rOqQ2b';
+                rankThumbnail = 'https://i.imgur.com/7rOqQ2b.png';
                 break;
             case 'DIAMOND':
-                rankThumbnail = 'https://imgur.com/wh6EnSq';
+                rankThumbnail = 'https://i.imgur.com/wh6EnSq.png';
                 break;
             case 'GRANDMASTER':
-                rankThumbnail = 'https://imgur.com/heig93V';
+                rankThumbnail = 'https://i.imgur.com/heig93V.png';
                 break;
             case 'CELESTIAL':
-                rankThumbnail = 'https://imgur.com/P3K40ug';
+                rankThumbnail = 'https://i.imgur.com/P3K40ug.png';
                 break;
             case 'ETERNITY':
-                rankThumbnail = 'https://imgur.com/9deeyEX';
+                rankThumbnail = 'https://i.imgur.com/9deeyEX.png';
                 break;
             case 'ONE ABOVE ALL':
-                rankThumbnail = 'https://imgur.com/fpub71E';
+                rankThumbnail = 'https://i.imgur.com/fpub71E.png';
                 break;
             default:
-                rankThumbnail = 'https://imgur.com/wIz6lNc';
+                rankThumbnail = 'https://i.imgur.com/wIz6lNc.png';
         }
 
         
