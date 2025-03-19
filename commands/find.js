@@ -87,9 +87,9 @@ module.exports = {
                 iconURL: interaction.user.displayAvatarURL() 
             })
             .addFields(
-                { name: '[Room]', value: teamName, inline: true },
-                { name: '[Slot]', value: slots, inline: true },
-                { name: '[Rank]', value: rank, inline: true }
+                { name: '> [Room]', value: teamName, inline: true },
+                { name: '> [Slot]', value: slots, inline: true },
+                { name: '> [Rank]', value: rank, inline: true }
             )
             .setThumbnail(rankThumbnail)
             
