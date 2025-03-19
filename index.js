@@ -2,7 +2,7 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { activeTeamMessages, createTeamEmbed, createJoinButton, updateTeamMessage } = require('./commands/gal');
+const { activeTeamMessages, updateTeamMessage } = require('./commands/gal');
 
 const client = new Client({
     intents: [
@@ -47,18 +47,16 @@ for (const file of eventFiles) {
 }
 
 client.on('voiceStateUpdate', async (oldState, newState) => {
-    // Check if the user joined, left, or moved between voice channels
     if (oldState.channelId !== newState.channelId) {
-        // If the user left a channel
         if (oldState.channelId) {
             await updateTeamMessage(oldState.channelId, client);
         }
-        // If the user joined a new channel
         if (newState.channelId) {
             await updateTeamMessage(newState.channelId, client);
         }
     }
 });
+
 
 // Login to Discord
 

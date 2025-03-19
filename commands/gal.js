@@ -1,4 +1,3 @@
-<<<<<<< Tabnine <<<<<<<
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 // Cache for rank thumbnails
@@ -18,64 +17,64 @@ const rankThumbnails = {
 // Store active team messages
 const activeTeamMessages = new Map();
 
-function createTeamEmbed(voiceChannel, rank, user) {//+
-    const teamName = voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`;//+
-    const membersInChannel = voiceChannel.members.size;//+
-    const maxSlots = voiceChannel.userLimit || '∞';//+
-    const slots = `${membersInChannel}/${maxSlots}`;//+
-//+
-    return new EmbedBuilder()//+
-        .setColor(0x00FFFF)//+
-        .setAuthor({ //+
-            name: user.username, //+
-            iconURL: user.displayAvatarURL() //+
-        })//+
-        .addFields(//+
-            { name: '> [Room]', value: `> ${teamName}`, inline: true },//+
-            { name: '> [Slot]', value: `> ${slots}`, inline: true },//+
-            { name: '> [Rank]', value: `> ${rank}`, inline: true }//+
-        )//+
-        .setThumbnail(rankThumbnails[rank] || rankThumbnails['NORMAL'])//+
-        .setFooter({ text: 'Cách sử dụng: /gal [rank] [Message]' });//+
-}//+
-//+
-function createJoinButton(voiceChannel) {//+
-    return {//+
-        type: 1,//+
-        components: [//+
-            {//+
-                type: 2,//+
-                style: 2,//+
-                label: `Tham Gia: ${voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`}`,//+
-                custom_id: `join_team_${voiceChannel.id}`,//+
-                emoji: { name: '🔊' }//+
-            }//+
-        ]//+
-    };//+
-}//+
-//+
-async function updateTeamMessage(voiceChannelId, client) {//+
-    const teamMessage = activeTeamMessages.get(voiceChannelId);//+
-    if (!teamMessage) return;//+
-//+
-    try {//+
-        const channel = await client.channels.fetch(teamMessage.channelId);//+
-        const message = await channel.messages.fetch(teamMessage.messageId);//+
-        const voiceChannel = await client.channels.fetch(voiceChannelId);//+
-        const user = await client.users.fetch(teamMessage.userId);//+
-//+
-        const updatedEmbed = createTeamEmbed(voiceChannel, teamMessage.rank, user);//+
-//+
-        await message.edit({//+
-            content: teamMessage.message,//+
-            embeds: [updatedEmbed],//+
-            components: [createJoinButton(voiceChannel)]//+
-        });//+
-    } catch (error) {//+
-        console.error('Error updating team message:', error);//+
-        activeTeamMessages.delete(voiceChannelId);//+
-    }//+
-}//+
+function createTeamEmbed(voiceChannel, rank, user) {
+    const teamName = voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`;
+    const membersInChannel = voiceChannel.members.size;
+    const maxSlots = voiceChannel.userLimit || '∞';
+    const slots = `${membersInChannel}/${maxSlots}`;
+
+    return new EmbedBuilder()
+        .setColor(0x00FFFF)
+        .setAuthor({ 
+            name: user.username, 
+            iconURL: user.displayAvatarURL() 
+        })
+        .addFields(
+            { name: '> [Room]', value: `> ${teamName}`, inline: true },
+            { name: '> [Slot]', value: `> ${slots}`, inline: true },
+            { name: '> [Rank]', value: `> ${rank}`, inline: true }
+        )
+        .setThumbnail(rankThumbnails[rank] || rankThumbnails['NORMAL'])
+        .setFooter({ text: 'Cách sử dụng: /gal [rank] [Message]' });
+}
+
+function createJoinButton(voiceChannel) {
+    return {
+        type: 1,
+        components: [
+            {
+                type: 2,
+                style: 2,
+                label: `Tham Gia: ${voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`}`,
+                custom_id: `join_team_${voiceChannel.id}`,
+                emoji: { name: '🔊' }
+            }
+        ]
+    };
+}
+
+async function updateTeamMessage(voiceChannelId, client) {
+    const teamMessage = activeTeamMessages.get(voiceChannelId);
+    if (!teamMessage) return;
+
+    try {
+        const channel = await client.channels.fetch(teamMessage.channelId);
+        const message = await channel.messages.fetch(teamMessage.messageId);
+        const voiceChannel = await client.channels.fetch(voiceChannelId);
+        const user = await client.users.fetch(teamMessage.userId);
+
+        const updatedEmbed = createTeamEmbed(voiceChannel, teamMessage.rank, user);
+
+        await message.edit({
+            content: teamMessage.message,
+            embeds: [updatedEmbed],
+            components: [createJoinButton(voiceChannel)]
+        });
+    } catch (error) {
+        console.error('Error updating team message:', error);
+        activeTeamMessages.delete(voiceChannelId);
+    }
+}
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('gal')
@@ -133,68 +132,6 @@ module.exports = {
         });
     },
     activeTeamMessages,
-    createTeamEmbed,//-
-    createJoinButton,//-
-};//-
-//-
-function createTeamEmbed(voiceChannel, rank, user) {//-
-    const teamName = voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`;//-
-    const membersInChannel = voiceChannel.members.size;//-
-    const maxSlots = voiceChannel.userLimit || '∞';//-
-    const slots = `${membersInChannel}/${maxSlots}`;//-
-//-
-    return new EmbedBuilder()//-
-        .setColor(0x00FFFF)//-
-        .setAuthor({ //-
-            name: user.username, //-
-            iconURL: user.displayAvatarURL() //-
-        })//-
-        .addFields(//-
-            { name: '> [Room]', value: `> ${teamName}`, inline: true },//-
-            { name: '> [Slot]', value: `> ${slots}`, inline: true },//-
-            { name: '> [Rank]', value: `> ${rank}`, inline: true }//-
-        )//-
-        .setThumbnail(rankThumbnails[rank] || rankThumbnails['NORMAL'])//-
-        .setFooter({ text: 'Cách sử dụng: /gal [rank] [Message]' });//-
-}//-
-//-
-function createJoinButton(voiceChannel) {//-
-    return {//-
-        type: 1,//-
-        components: [//-
-            {//-
-                type: 2,//-
-                style: 2,//-
-                label: `Tham Gia: ${voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`}`,//-
-                custom_id: `join_team_${voiceChannel.id}`,//-
-                emoji: { name: '🔊' }//-
-            }//-
-        ]//-
-    };//-
-}//-
-//-
-//-
-module.exports.updateTeamMessage = async function(voiceChannelId, client) {//-
-    const teamMessage = activeTeamMessages.get(voiceChannelId);//-
-    if (!teamMessage) return;//-
-//-
-    try {//-
-        const channel = await client.channels.fetch(teamMessage.channelId);//-
-        const message = await channel.messages.fetch(teamMessage.messageId);//-
-        const voiceChannel = await client.channels.fetch(voiceChannelId);//-
-        const user = await client.users.fetch(teamMessage.userId);//-
-//-
-        const updatedEmbed = createTeamEmbed(voiceChannel, teamMessage.rank, user);//-
-//-
-        await message.edit({//-
-            content: teamMessage.message,//-
-            embeds: [updatedEmbed],//-
-            components: [createJoinButton(voiceChannel)]//-
-        });//-
-    } catch (error) {//-
-        console.error('Error updating team message:', error);//-
-        activeTeamMessages.delete(voiceChannelId);//-
-    }//-
-    updateTeamMessage//+
+    updateTeamMessage
 };
->>>>>>> Tabnine >>>>>>>// {"source":"chat"}
+
