@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('find')
+        .setName('gal')  // Changed from 'find' to 'gal'
         .setDescription('Create a team finding request')
         .addStringOption(option =>
             option.setName('rank')
