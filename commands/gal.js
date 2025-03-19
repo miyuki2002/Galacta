@@ -54,6 +54,8 @@ function createJoinButton(voiceChannel) {
 }
 
 
+
+
 async function handleJoinButton(interaction) {
     const voiceChannelId = interaction.customId.split('_')[2];
     const voiceChannel = interaction.guild.channels.cache.get(voiceChannelId);
@@ -63,13 +65,29 @@ async function handleJoinButton(interaction) {
     }
 
     try {
+        if (interaction.member.voice.channel === voiceChannel) {
+            return interaction.reply({ content: 'You are already in this voice channel!', ephemeral: true });
+        }
         await interaction.member.voice.setChannel(voiceChannel);
         await interaction.reply({ content: `Joined ${voiceChannel.name}!`, ephemeral: true });
     } catch (error) {
         console.error('Error moving member to voice channel:', error);
-        await interaction.reply({ content: 'Failed to join the voice channel.', ephemeral: true });
+        if (error.code === 50013) {
+            await interaction.reply({ 
+                content: 'I don\'t have permission to move you to that voice channel.', 
+                ephemeral: true 
+            });
+        } else {
+            await interaction.reply({ 
+                content: 'Failed to join the voice channel. Please try joining manually.', 
+                ephemeral: true 
+            });
+        }
     }
 }
+
+
+
 async function updateTeamMessage(voiceChannelId, client) {
     const teamMessage = activeTeamMessages.get(voiceChannelId);
     if (!teamMessage) return;
@@ -152,5 +170,6 @@ module.exports = {
     activeTeamMessages,
     updateTeamMessage,
     handleJoinButton
+
 };
 
