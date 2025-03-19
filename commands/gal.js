@@ -1,8 +1,84 @@
+<<<<<<< Tabnine <<<<<<<
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
+// Cache for rank thumbnails
+const rankThumbnails = {
+    'BRONZE': 'https://i.imgur.com/ubB6IuL.png',
+    'SILVER': 'https://i.imgur.com/YVsXLXC.png',
+    'GOLD': 'https://i.imgur.com/pE989Hf.png',
+    'PLATINUM': 'https://i.imgur.com/7rOqQ2b.png',
+    'DIAMOND': 'https://i.imgur.com/wh6EnSq.png',
+    'GRANDMASTER': 'https://i.imgur.com/heig93V.png',
+    'CELESTIAL': 'https://i.imgur.com/P3K40ug.png',
+    'ETERNITY': 'https://i.imgur.com/9deeyEX.png',
+    'ONE ABOVE ALL': 'https://i.imgur.com/fpub71E.png',
+    'NORMAL': 'https://i.imgur.com/wIz6lNc.png'
+};
+
+// Store active team messages
+const activeTeamMessages = new Map();
+
+function createTeamEmbed(voiceChannel, rank, user) {//+
+    const teamName = voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`;//+
+    const membersInChannel = voiceChannel.members.size;//+
+    const maxSlots = voiceChannel.userLimit || '∞';//+
+    const slots = `${membersInChannel}/${maxSlots}`;//+
+//+
+    return new EmbedBuilder()//+
+        .setColor(0x00FFFF)//+
+        .setAuthor({ //+
+            name: user.username, //+
+            iconURL: user.displayAvatarURL() //+
+        })//+
+        .addFields(//+
+            { name: '> [Room]', value: `> ${teamName}`, inline: true },//+
+            { name: '> [Slot]', value: `> ${slots}`, inline: true },//+
+            { name: '> [Rank]', value: `> ${rank}`, inline: true }//+
+        )//+
+        .setThumbnail(rankThumbnails[rank] || rankThumbnails['NORMAL'])//+
+        .setFooter({ text: 'Cách sử dụng: /gal [rank] [Message]' });//+
+}//+
+//+
+function createJoinButton(voiceChannel) {//+
+    return {//+
+        type: 1,//+
+        components: [//+
+            {//+
+                type: 2,//+
+                style: 2,//+
+                label: `Tham Gia: ${voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`}`,//+
+                custom_id: `join_team_${voiceChannel.id}`,//+
+                emoji: { name: '🔊' }//+
+            }//+
+        ]//+
+    };//+
+}//+
+//+
+async function updateTeamMessage(voiceChannelId, client) {//+
+    const teamMessage = activeTeamMessages.get(voiceChannelId);//+
+    if (!teamMessage) return;//+
+//+
+    try {//+
+        const channel = await client.channels.fetch(teamMessage.channelId);//+
+        const message = await channel.messages.fetch(teamMessage.messageId);//+
+        const voiceChannel = await client.channels.fetch(voiceChannelId);//+
+        const user = await client.users.fetch(teamMessage.userId);//+
+//+
+        const updatedEmbed = createTeamEmbed(voiceChannel, teamMessage.rank, user);//+
+//+
+        await message.edit({//+
+            content: teamMessage.message,//+
+            embeds: [updatedEmbed],//+
+            components: [createJoinButton(voiceChannel)]//+
+        });//+
+    } catch (error) {//+
+        console.error('Error updating team message:', error);//+
+        activeTeamMessages.delete(voiceChannelId);//+
+    }//+
+}//+
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('gal')  // Changed from 'find' to 'gal'
+        .setName('gal')
         .setDescription('Create a team finding request')
         .addStringOption(option =>
             option.setName('rank')
@@ -26,102 +102,99 @@ module.exports = {
                 .setRequired(true)),
 
     async execute(interaction) {
-        // Get the options from the interaction
         const rank = interaction.options.getString('rank');
         const message = interaction.options.getString('message');
-
-        // Check if user is in a voice channel
         const member = interaction.member;
-        if (!member.voice || !member.voice.channel) {
+
+        if (!member.voice?.channel) {
             return interaction.reply({ 
                 content: 'You need to be in a voice channel to use this command!', 
                 ephemeral: true 
             });
         }
 
-        // Use voice channel ID as team number
-        const teamNumber = member.voice.channel.id;
-        const teamName = member.voice.channel.name || `TEAM #${teamNumber.slice(-4)}`;
+        const voiceChannel = member.voice.channel;
+        const teamEmbed = createTeamEmbed(voiceChannel, rank, interaction.user);
 
-        // Count members in voice channel for slots
-        const membersInChannel = member.voice.channel.members.size;
-        const maxSlots = member.voice.channel.userLimit || '∞'; // Get user limit, use '∞' if no limit/
-        const slots = `${membersInChannel}/${maxSlots}`;
-
-
-        // Get rank thumbnail based on rank
-        // https://i.imgur.com/a/mOFVcqM
-        let rankThumbnail;
-        switch(rank) {
-            case 'BRONZE':
-                rankThumbnail = 'https://i.imgur.com/ubB6IuL.png';
-                break;
-            case 'SILVER':
-                rankThumbnail = 'https://i.imgur.com/YVsXLXC.png';
-                break;
-            case 'GOLD':
-                rankThumbnail = 'https://i.imgur.com/pE989Hf.png';
-                break;
-            case 'PLATINUM':
-                rankThumbnail = 'https://i.imgur.com/7rOqQ2b.png';
-                break;
-            case 'DIAMOND':
-                rankThumbnail = 'https://i.imgur.com/wh6EnSq.png';
-                break;
-            case 'GRANDMASTER':
-                rankThumbnail = 'https://i.imgur.com/heig93V.png';
-                break;
-            case 'CELESTIAL':
-                rankThumbnail = 'https://i.imgur.com/P3K40ug.png';
-                break;
-            case 'ETERNITY':
-                rankThumbnail = 'https://i.imgur.com/9deeyEX.png';
-                break;
-            case 'ONE ABOVE ALL':
-                rankThumbnail = 'https://i.imgur.com/fpub71E.png';
-                break;
-            case 'NORMAL': 
-                rankThumbnail = 'https://i.imgur.com/wIz6lNc.png';
-                break;
-            default:
-                rankThumbnail = 'https://i.imgur.com/wIz6lNc.png';
-        }
-        // Create the embed
-        const teamEmbed = new EmbedBuilder()
-            .setColor(0x00FFFF) // Aqua color - My favorite color
-            .setAuthor({ 
-                name: interaction.user.username, 
-                iconURL: interaction.user.displayAvatarURL() 
-            })
-            .addFields(
-                { name: '> [Room]', value: `> ${teamName}`, inline: true },
-                { name: '> [Slot]', value: `> ${slots}`, inline: true },
-                { name: '> [Rank]', value: `> ${rank}`, inline: true }
-            )
-            .setThumbnail(rankThumbnail)
-
-            .setFooter({ text: 'Cách sử dụng: /gal [rank] [Message]' });
-
-
-        // Send the embed with a join button and the message
-        await interaction.reply({
+        const reply = await interaction.reply({
             content: message,
             embeds: [teamEmbed],
-            components: [
-                {
-                    type: 1, // Action Row
-                    components: [
-                        {
-                            type: 2, // Button
-                            style: 2, // Secondary (gray) style
-                            label: `Tham Gia: ${teamName}`,
-                            custom_id: `join_team_${teamNumber}`,
-                            emoji: { name: '🔊' }
-                        }
-                    ]
-                }
-            ]
+            components: [createJoinButton(voiceChannel)],
+            fetchReply: true
         });
 
+        // Store the message details for updating
+        activeTeamMessages.set(voiceChannel.id, {
+            messageId: reply.id,
+            channelId: reply.channel.id,
+            rank: rank,
+            message: message,
+            userId: interaction.user.id
+        });
     },
+    activeTeamMessages,
+    createTeamEmbed,//-
+    createJoinButton,//-
+};//-
+//-
+function createTeamEmbed(voiceChannel, rank, user) {//-
+    const teamName = voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`;//-
+    const membersInChannel = voiceChannel.members.size;//-
+    const maxSlots = voiceChannel.userLimit || '∞';//-
+    const slots = `${membersInChannel}/${maxSlots}`;//-
+//-
+    return new EmbedBuilder()//-
+        .setColor(0x00FFFF)//-
+        .setAuthor({ //-
+            name: user.username, //-
+            iconURL: user.displayAvatarURL() //-
+        })//-
+        .addFields(//-
+            { name: '> [Room]', value: `> ${teamName}`, inline: true },//-
+            { name: '> [Slot]', value: `> ${slots}`, inline: true },//-
+            { name: '> [Rank]', value: `> ${rank}`, inline: true }//-
+        )//-
+        .setThumbnail(rankThumbnails[rank] || rankThumbnails['NORMAL'])//-
+        .setFooter({ text: 'Cách sử dụng: /gal [rank] [Message]' });//-
+}//-
+//-
+function createJoinButton(voiceChannel) {//-
+    return {//-
+        type: 1,//-
+        components: [//-
+            {//-
+                type: 2,//-
+                style: 2,//-
+                label: `Tham Gia: ${voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`}`,//-
+                custom_id: `join_team_${voiceChannel.id}`,//-
+                emoji: { name: '🔊' }//-
+            }//-
+        ]//-
+    };//-
+}//-
+//-
+//-
+module.exports.updateTeamMessage = async function(voiceChannelId, client) {//-
+    const teamMessage = activeTeamMessages.get(voiceChannelId);//-
+    if (!teamMessage) return;//-
+//-
+    try {//-
+        const channel = await client.channels.fetch(teamMessage.channelId);//-
+        const message = await channel.messages.fetch(teamMessage.messageId);//-
+        const voiceChannel = await client.channels.fetch(voiceChannelId);//-
+        const user = await client.users.fetch(teamMessage.userId);//-
+//-
+        const updatedEmbed = createTeamEmbed(voiceChannel, teamMessage.rank, user);//-
+//-
+        await message.edit({//-
+            content: teamMessage.message,//-
+            embeds: [updatedEmbed],//-
+            components: [createJoinButton(voiceChannel)]//-
+        });//-
+    } catch (error) {//-
+        console.error('Error updating team message:', error);//-
+        activeTeamMessages.delete(voiceChannelId);//-
+    }//-
+    updateTeamMessage//+
 };
+>>>>>>> Tabnine >>>>>>>// {"source":"chat"}

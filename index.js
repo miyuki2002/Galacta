@@ -2,14 +2,15 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { activeTeamMessages, createTeamEmbed, createJoinButton, updateTeamMessage } = require('./commands/gal');
 
-const client = new Client({ 
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-  ] 
+const client = new Client({
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildVoiceStates,
+    ]
 });
 
 
@@ -22,7 +23,7 @@ const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('
 for (const file of commandFiles) {
   const filePath = path.join(commandsPath, file);
   const command = require(filePath);
-  
+
   if ('data' in command && 'execute' in command) {
     client.commands.set(command.data.name, command);
   } else {
@@ -37,7 +38,7 @@ const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'
 for (const file of eventFiles) {
   const filePath = path.join(eventsPath, file);
   const event = require(filePath);
-  
+
   if (event.once) {
     client.once(event.name, (...args) => event.execute(...args));
   } else {
@@ -45,5 +46,20 @@ for (const file of eventFiles) {
   }
 }
 
+client.on('voiceStateUpdate', async (oldState, newState) => {
+    // Check if the user joined, left, or moved between voice channels
+    if (oldState.channelId !== newState.channelId) {
+        // If the user left a channel
+        if (oldState.channelId) {
+            await updateTeamMessage(oldState.channelId, client);
+        }
+        // If the user joined a new channel
+        if (newState.channelId) {
+            await updateTeamMessage(newState.channelId, client);
+        }
+    }
+});
+
 // Login to Discord
+
 client.login(process.env.TOKEN);
