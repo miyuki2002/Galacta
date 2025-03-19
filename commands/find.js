@@ -95,8 +95,9 @@ module.exports = {
             
             .setFooter({ text: 'Cách sử dụng: /find [rank] [Message]' });
 
-        // Send the embed with a join button
-        await interaction.reply(message, {
+        // Send the embed with a join button and the message
+        await interaction.reply({
+            content: message,
             embeds: [teamEmbed],
             components: [
                 {
@@ -113,5 +114,6 @@ module.exports = {
                 }
             ]
         });
+
     },
 };
