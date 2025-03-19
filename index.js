@@ -2,7 +2,7 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { activeTeamMessages, updateTeamMessage } = require('./commands/gal');
+const { activeTeamMessages, updateTeamMessage, handleJoinButton } = require('./commands/gal');
 
 const client = new Client({
     intents: [
@@ -56,6 +56,17 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         }
     }
 });
+
+client.on('interactionCreate', async interaction => {
+    if (interaction.isCommand()) {
+        // Your existing command handling code
+    } else if (interaction.isButton()) {
+        if (interaction.customId.startsWith('join_voice_')) {
+            await handleJoinButton(interaction);
+        }
+    }
+});
+
 
 
 // Login to Discord

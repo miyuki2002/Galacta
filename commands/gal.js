@@ -44,15 +44,32 @@ function createJoinButton(voiceChannel) {
         components: [
             {
                 type: 2,
-                style: 2,
+                style: 1, // Primary button style
                 label: `Tham Gia: ${voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`}`,
-                custom_id: `join_team_${voiceChannel.id}`,
+                custom_id: `join_voice_${voiceChannel.id}`,
                 emoji: { name: '🔊' }
             }
         ]
     };
 }
 
+
+async function handleJoinButton(interaction) {
+    const voiceChannelId = interaction.customId.split('_')[2];
+    const voiceChannel = interaction.guild.channels.cache.get(voiceChannelId);
+
+    if (!voiceChannel) {
+        return interaction.reply({ content: 'Voice channel not found!', ephemeral: true });
+    }
+
+    try {
+        await interaction.member.voice.setChannel(voiceChannel);
+        await interaction.reply({ content: `Joined ${voiceChannel.name}!`, ephemeral: true });
+    } catch (error) {
+        console.error('Error moving member to voice channel:', error);
+        await interaction.reply({ content: 'Failed to join the voice channel.', ephemeral: true });
+    }
+}
 async function updateTeamMessage(voiceChannelId, client) {
     const teamMessage = activeTeamMessages.get(voiceChannelId);
     if (!teamMessage) return;
@@ -98,12 +115,13 @@ module.exports = {
         .addStringOption(option =>
             option.setName('message')
                 .setDescription('Your message to potential teammates')
-                .setRequired(true)),
+                .setRequired(false)),
 
     async execute(interaction) {
         const rank = interaction.options.getString('rank');
-        const message = interaction.options.getString('message');
+        const message = interaction.options.getString('message') || 'Tìm người chơi'; // Default message if not provided
         const member = interaction.member;
+
 
         if (!member.voice?.channel) {
             return interaction.reply({ 
@@ -132,6 +150,7 @@ module.exports = {
         });
     },
     activeTeamMessages,
-    updateTeamMessage
+    updateTeamMessage,
+    handleJoinButton
 };
 
