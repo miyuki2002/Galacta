@@ -30,7 +30,7 @@ module.exports = {
 
         // Check if user is in a voice channel
         const member = interaction.member;
-        if (!member.voice.channel) {
+        if (!member.voice || !member.voice.channel) {
             return interaction.reply({ 
                 content: 'You need to be in a voice channel to use this command!', 
                 ephemeral: true 
@@ -45,6 +45,7 @@ module.exports = {
         const membersInChannel = member.voice.channel.members.size;
         const maxSlots = 5; // Assuming 5 is the max team size
         const slots = `${membersInChannel}/${maxSlots}`;
+
 
         // Get rank thumbnail based on rank
         let rankThumbnail;
