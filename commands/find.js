@@ -92,14 +92,11 @@ module.exports = {
                 { name: '[Rank]', value: rank, inline: true }
             )
             .setThumbnail(rankThumbnail)
-            .addFields(
-                { name: 'Cách sử dụng:', value: `/find [rank] [Message]` },
-                { name: 'Message:', value: message }
-            )
-            .setFooter({ text: 'Click the button below to join' });
+            
+            .setFooter({ text: 'Cách sử dụng: /find [rank] [Message]' });
 
         // Send the embed with a join button
-        await interaction.reply({
+        await interaction.reply(message, {
             embeds: [teamEmbed],
             components: [
                 {
