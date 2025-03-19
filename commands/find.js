@@ -49,37 +49,38 @@ module.exports = {
 
 
         // Get rank thumbnail based on rank
+        // https://imgur.com/a/mOFVcqM
         let rankThumbnail;
         switch(rank) {
             case 'BRONZE':
-                rankThumbnail = 'https://example.com/bronze_icon.png';
+                rankThumbnail = 'https://imgur.com/ubB6IuL';
                 break;
             case 'SILVER':
-                rankThumbnail = 'https://example.com/silver_icon.png';
+                rankThumbnail = 'https://imgur.com/YVsXLXC';
                 break;
             case 'GOLD':
-                rankThumbnail = 'https://example.com/gold_icon.png';
+                rankThumbnail = 'https://imgur.com/pE989Hf';
                 break;
             case 'PLATINUM':
-                rankThumbnail = 'https://example.com/platinum_icon.png';
+                rankThumbnail = 'https://imgur.com/7rOqQ2b';
                 break;
             case 'DIAMOND':
-                rankThumbnail = 'https://example.com/diamond_icon.png';
+                rankThumbnail = 'https://imgur.com/wh6EnSq';
                 break;
             case 'GRANDMASTER':
-                rankThumbnail = 'https://example.com/grandmaster_icon.png';
+                rankThumbnail = 'https://imgur.com/heig93V';
                 break;
             case 'CELESTIAL':
-                rankThumbnail = 'https://example.com/celestial_icon.png';
+                rankThumbnail = 'https://imgur.com/P3K40ug';
                 break;
             case 'ETERNITY':
-                rankThumbnail = 'https://example.com/eternity_icon.png';
+                rankThumbnail = 'https://imgur.com/9deeyEX';
                 break;
             case 'ONE ABOVE ALL':
-                rankThumbnail = 'https://example.com/one_above_all_icon.png';
+                rankThumbnail = 'https://imgur.com/fpub71E';
                 break;
             default:
-                rankThumbnail = 'https://example.com/default_icon.png';
+                rankThumbnail = 'https://imgur.com/wIz6lNc';
         }
 
         
