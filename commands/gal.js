@@ -17,7 +17,8 @@ module.exports = {
                     { name: 'Grandmaster', value: 'GRANDMASTER' },
                     { name: 'Celestial', value: 'CELESTIAL' },
                     { name: 'Eternity', value: 'ETERNITY' },
-                    { name: 'One Above All', value: 'ONE ABOVE ALL' }
+                    { name: 'One Above All', value: 'ONE ABOVE ALL' },
+                    { name: 'Normal', value: 'NORMAL' },
                 ))
         .addStringOption(option =>
             option.setName('message')
@@ -44,7 +45,7 @@ module.exports = {
 
         // Count members in voice channel for slots
         const membersInChannel = member.voice.channel.members.size;
-        const maxSlots = 5; // Assuming 5 is the max team size - maybe not
+        const maxSlots = member.voice.channel.userLimit || '∞'; // Get user limit, use '∞' if no limit/
         const slots = `${membersInChannel}/${maxSlots}`;
 
 
@@ -79,11 +80,12 @@ module.exports = {
             case 'ONE ABOVE ALL':
                 rankThumbnail = 'https://i.imgur.com/fpub71E.png';
                 break;
+            case 'NORMAL': 
+                rankThumbnail = 'https://i.imgur.com/wIz6lNc.png';
+                break;
             default:
                 rankThumbnail = 'https://i.imgur.com/wIz6lNc.png';
         }
-
-        
         // Create the embed
         const teamEmbed = new EmbedBuilder()
             .setColor(0x00FFFF) // Aqua color - My favorite color
@@ -97,8 +99,9 @@ module.exports = {
                 { name: '> [Rank]', value: `> ${rank}`, inline: true }
             )
             .setThumbnail(rankThumbnail)
-            
-            .setFooter({ text: 'Cách sử dụng: /find [rank] [Message]' });
+
+            .setFooter({ text: 'Cách sử dụng: /gal [rank] [Message]' });
+
 
         // Send the embed with a join button and the message
         await interaction.reply({
