@@ -81,7 +81,7 @@ module.exports = {
         
         // Create the embed
         const teamEmbed = new EmbedBuilder()
-            .setColor(0x9B59B6) // Purple color
+            .setColor(0x00FFFF) // Aqua color - My favorite color
             .setAuthor({ 
                 name: interaction.user.username, 
                 iconURL: interaction.user.displayAvatarURL() 
