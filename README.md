@@ -49,7 +49,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- Thanks to the Discord.js team for their excellent library
+Thanks to the Discord.js team for their excellent library
 
 ## Support
 
