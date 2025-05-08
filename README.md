@@ -61,7 +61,7 @@ The Guild Handler automatically deploys commands to new guilds when the bot join
 To develop new features:
 
 1. Create commands in the `commands` directory
-2. Add event handlers in the `src/events` directory
+2. Add event handlers in the `events` directory
 3. Test locally with a development guild using:
 ```bash
 npm run dev
