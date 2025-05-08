@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { teamMessages, userHistory } = require('../src/database/db');
 
 // Cache for rank thumbnails
 const rankThumbnails = {
@@ -38,23 +39,27 @@ function createTeamEmbed(voiceChannel, rank, user) {
         .setFooter({ text: 'Cách sử dụng: /gal [rank] [Message]' });
 }
 
-function createJoinButton(voiceChannel) {
+function createButtons(voiceChannel, userId) {
     return {
         type: 1,
         components: [
             {
                 type: 2,
-                style: 1, // Primary button style
+                style: 1, // Primary button style (blue)
                 label: `Tham Gia: ${voiceChannel.name || `TEAM #${voiceChannel.id.slice(-4)}`}`,
                 custom_id: `join_voice_${voiceChannel.id}`,
                 emoji: { name: '🔊' }
+            },
+            {
+                type: 2,
+                style: 3, // Success button style (green)
+                label: "Sử dụng lại",
+                custom_id: `repeat_gal_${userId}`,
+                emoji: { name: '🔄' }
             }
         ]
     };
 }
-
-
-
 
 async function handleJoinButton(interaction) {
     const voiceChannelId = interaction.customId.split('_')[2];
@@ -86,30 +91,93 @@ async function handleJoinButton(interaction) {
     }
 }
 
-
+async function handleRepeatButton(interaction) {
+    const userId = interaction.customId.split('_')[2];
+    
+    // Only allow the original user to repeat
+    if (interaction.user.id !== userId) {
+        return interaction.reply({ 
+            content: 'Only the original user can repeat this command.',
+            ephemeral: true 
+        });
+    }
+    
+    const member = interaction.member;
+    if (!member.voice?.channel) {
+        return interaction.reply({ 
+            content: 'You need to be in a voice channel to repeat this command!', 
+            ephemeral: true 
+        });
+    }
+    
+    // Get user's last settings
+    const userLastSettings = userHistory.getByUserId.get(userId);
+    if (!userLastSettings) {
+        return interaction.reply({ 
+            content: 'No previous settings found. Please use the /gal command first.', 
+            ephemeral: true 
+        });
+    }
+    
+    const voiceChannel = member.voice.channel;
+    const teamEmbed = createTeamEmbed(voiceChannel, userLastSettings.last_rank, interaction.user);
+    
+    await interaction.reply({ content: 'Repeating your last team message...', ephemeral: true });
+    
+    const message = await interaction.channel.send({
+        content: userLastSettings.last_message,
+        embeds: [teamEmbed],
+        components: [createButtons(voiceChannel, userId)]
+    });
+    
+    // Save to database
+    teamMessages.save.run(
+        voiceChannel.id,
+        message.id,
+        message.channel.id,
+        userLastSettings.last_rank,
+        userLastSettings.last_message,
+        userId,
+        Date.now()
+    );
+}
 
 async function updateTeamMessage(voiceChannelId, client) {
-    const teamMessage = activeTeamMessages.get(voiceChannelId);
+    const teamMessage = teamMessages.getByVoiceChannel.get(voiceChannelId);
     if (!teamMessage) return;
 
     try {
-        const channel = await client.channels.fetch(teamMessage.channelId);
-        const message = await channel.messages.fetch(teamMessage.messageId);
+        const channel = await client.channels.fetch(teamMessage.channel_id);
+        const message = await channel.messages.fetch(teamMessage.message_id);
         const voiceChannel = await client.channels.fetch(voiceChannelId);
-        const user = await client.users.fetch(teamMessage.userId);
+        const user = await client.users.fetch(teamMessage.user_id);
 
         const updatedEmbed = createTeamEmbed(voiceChannel, teamMessage.rank, user);
 
         await message.edit({
             content: teamMessage.message,
             embeds: [updatedEmbed],
-            components: [createJoinButton(voiceChannel)]
+            components: [createButtons(voiceChannel, teamMessage.user_id)]
         });
     } catch (error) {
         console.error('Error updating team message:', error);
-        activeTeamMessages.delete(voiceChannelId);
+        // Remove from database if message no longer exists
+        teamMessages.delete.run(voiceChannelId);
     }
 }
+
+// Load active team messages from database at startup
+function loadTeamMessages() {
+    try {
+        const messages = teamMessages.getAll.all();
+        console.log(`Loaded ${messages.length} active team messages from database`);
+        return messages;
+    } catch (error) {
+        console.error('Error loading team messages:', error);
+        return [];
+    }
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('gal')
@@ -139,7 +207,7 @@ module.exports = {
         const rank = interaction.options.getString('rank');
         const message = interaction.options.getString('message') || 'Tìm người chơi'; // Default message if not provided
         const member = interaction.member;
-
+        const userId = interaction.user.id;
 
         if (!member.voice?.channel) {
             return interaction.reply({ 
@@ -154,22 +222,33 @@ module.exports = {
         const reply = await interaction.reply({
             content: message,
             embeds: [teamEmbed],
-            components: [createJoinButton(voiceChannel)],
+            components: [createButtons(voiceChannel, userId)],
             fetchReply: true
         });
 
-        // Store the message details for updating
-        activeTeamMessages.set(voiceChannel.id, {
-            messageId: reply.id,
-            channelId: reply.channel.id,
-            rank: rank,
-            message: message,
-            userId: interaction.user.id
-        });
+        // Save to SQLite
+        teamMessages.save.run(
+            voiceChannel.id,
+            reply.id,
+            reply.channel.id,
+            rank,
+            message,
+            userId,
+            Date.now()
+        );
+        
+        // Save user's last settings
+        userHistory.save.run(
+            userId,
+            rank,
+            message,
+            Date.now()
+        );
     },
-    activeTeamMessages,
+    loadTeamMessages,
     updateTeamMessage,
-    handleJoinButton
-
+    handleJoinButton,
+    handleRepeatButton
 };
+
 

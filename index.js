@@ -2,7 +2,8 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { activeTeamMessages, updateTeamMessage, handleJoinButton } = require('./commands/gal');
+const { loadTeamMessages, updateTeamMessage, handleJoinButton, handleRepeatButton } = require('./commands/gal');
+const { closeDatabase } = require('./src/database/db');
 
 const client = new Client({
     intents: [
@@ -13,7 +14,26 @@ const client = new Client({
     ]
 });
 
+// Load active team messages from database
+client.once('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+    loadTeamMessages();
+});
 
+// Process termination handler
+process.on('SIGINT', () => {
+    console.log('Application shutting down...');
+    closeDatabase();
+    client.destroy();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('Application terminating...');
+    closeDatabase();
+    client.destroy();
+    process.exit(0);
+});
 
 client.commands = new Collection();
 
@@ -60,16 +80,24 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 
 client.on('interactionCreate', async interaction => {
     if (interaction.isCommand()) {
-        // Your existing command handling code
+        const command = client.commands.get(interaction.commandName);
+
+        if (!command) return;
+
+        try {
+            await command.execute(interaction);
+        } catch (error) {
+            console.error(error);
+            await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
+        }
     } else if (interaction.isButton()) {
         if (interaction.customId.startsWith('join_voice_')) {
             await handleJoinButton(interaction);
+        } else if (interaction.customId.startsWith('repeat_gal_')) {
+            await handleRepeatButton(interaction);
         }
     }
 });
 
-
-
 // Login to Discord
-
 client.login(process.env.TOKEN);
