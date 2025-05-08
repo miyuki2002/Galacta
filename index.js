@@ -2,8 +2,11 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { activeTeamMessages, updateTeamMessage, handleJoinButton } = require('./commands/gal');
+const { setupProcessHandlers } = require('./utils/processHandlers');
+const initSystem = require('./services/initSystem');
+const logger = require('./utils/logger');
 
+// Create the client instance
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -13,9 +16,12 @@ const client = new Client({
     ]
 });
 
-
-
+// Initialize collections
 client.commands = new Collection();
+client.guildProfiles = new Map();
+
+// Set up process event handlers
+setupProcessHandlers(client);
 
 // Load commands
 const commandsPath = path.join(__dirname, 'commands');
@@ -28,9 +34,12 @@ for (const file of commandFiles) {
   if ('data' in command && 'execute' in command) {
     client.commands.set(command.data.name, command);
   } else {
-    console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+    logger.warn('COMMAND', `The command at ${filePath} is missing a required "data" or "execute" property.`);
   }
 }
+
+// Mark commands as loaded
+initSystem.complete('commands');
 
 // Load events
 const eventsPath = path.join(__dirname, 'events');
@@ -47,29 +56,15 @@ for (const file of eventFiles) {
   }
 }
 
-client.on('voiceStateUpdate', async (oldState, newState) => {
-    if (oldState.channelId !== newState.channelId) {
-        if (oldState.channelId) {
-            await updateTeamMessage(oldState.channelId, client);
-        }
-        if (newState.channelId) {
-            await updateTeamMessage(newState.channelId, client);
-        }
-    }
-});
-
-client.on('interactionCreate', async interaction => {
-    if (interaction.isCommand()) {
-        // Your existing command handling code
-    } else if (interaction.isButton()) {
-        if (interaction.customId.startsWith('join_voice_')) {
-            await handleJoinButton(interaction);
-        }
-    }
-});
-
-
+// Database is ready
+initSystem.complete('database');
 
 // Login to Discord
-
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN || process.env.DISCORD_TOKEN)
+    .then(() => {
+        logger.info('SYSTEM', 'Bot login successful');
+    })
+    .catch(error => {
+        logger.error('SYSTEM', 'Failed to login:', error);
+        process.exit(1);
+    });

@@ -1,56 +1,77 @@
-# Galacta Discord Bot
+# Galacta Bot
 
-Galacta is a Discord bot designed to help manage team-finding requests in voice channels. It allows users to create team requests with their rank and a custom message, and provides an easy way for other users to join these teams.
+## Overview
+Galacta is a Discord.js bot with SQLite storage for guild data and automatic command deployment.
 
 ## Features
+- SQLite database storage for persistent data
+- Automatic slash command deployment to guilds
+- Team finding system with voice channel integration
+- History tracking for command reuse
 
-- Create team-finding requests with custom ranks and messages
-- Automatically update team information when users join or leave voice channels
-- Easy-to-use button for joining voice channels
-- Rank-based thumbnails for visual appeal
+## Installation
+1. Clone the repository
+2. Install dependencies
+```bash
+npm install
+```
+3. Create a .env file with your bot token
+```
+TOKEN=your_discord_token_here
+CLIENT_ID=your_client_id_here
+```
+4. Start the bot
+```bash
+npm start
+```
 
-## Commands
+## Command Structure
+Commands are automatically loaded from the `commands` directory. Each command file should follow this structure:
 
-- `/gal [rank] [message]`: Create a team-finding request
-  - `rank`: Your current rank (Bronze, Silver, Gold, etc.)
-  - `message`: Optional custom message for your team request
+```javascript
+const { SlashCommandBuilder } = require('discord.js');
 
-## Setup
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('commandname')
+    .setDescription('Command description'),
+  
+  async execute(interaction) {
+    // Command logic here
+  }
+};
+```
 
-1. Clone this repository
-2. Install dependencies: `npm install`
-3. Create a `.env` file in the root directory and add your Discord bot token: `TOKEN=your_discord_bot_token_here`
-4. Run the bot: `npm start`
+## Database System
+The bot uses SQLite for storage, with database files located in the `data` directory. The database system includes:
 
-## Requirements
+- Team message tracking
+- User history
+- Guild settings and configuration
 
-- Node.js v16.9.0 or higher
-- Discord.js v14
+## Guild Handler
+The Guild Handler automatically deploys commands to new guilds when the bot joins. It also:
 
-## Permissions
+1. Stores guild information in the database
+2. Manages command deployment
+3. Provides welcome messages in default channels
+4. Tracks guild settings
 
-The bot requires the following permissions:
-- Read Messages/View Channels
-- Send Messages
-- Embed Links
-- Use External Emojis
-- Add Reactions
-- Manage Messages
-- Connect
-- Move Members
+## Development
+To develop new features:
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Create commands in the `commands` directory
+2. Add event handlers in the `src/events` directory
+3. Test locally with a development guild using:
+```bash
+npm run dev
+```
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+ISC License
 
 ## Acknowledgments
-
 Thanks to the Discord.js team for their excellent library
 
 ## Support
-
 If you need help or have any questions, please open an issue in this repository.
