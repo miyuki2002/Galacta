@@ -4,6 +4,10 @@ const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const { loadTeamMessages, updateTeamMessage, handleJoinButton, handleRepeatButton } = require('./commands/gal');
 const { closeDatabase } = require('./src/database/db');
+const initSystem = require('./src/services/initSystem');
+const { handleCommand } = require('./src/handlers/commandHandler');
+const { setupGuildHandlers } = require('./src/handlers/guildHandler');
+const logger = require('./src/utils/logger');
 
 const client = new Client({
     intents: [
@@ -14,28 +18,38 @@ const client = new Client({
     ]
 });
 
-// Load active team messages from database
-client.once('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
-    loadTeamMessages();
-});
+// Initialize commands collection
+client.commands = new Collection();
+client.guildProfiles = new Map();
 
 // Process termination handler
 process.on('SIGINT', () => {
-    console.log('Application shutting down...');
+    logger.info('SYSTEM', 'Application shutting down...');
     closeDatabase();
     client.destroy();
     process.exit(0);
 });
 
 process.on('SIGTERM', () => {
-    console.log('Application terminating...');
+    logger.info('SYSTEM', 'Application terminating...');
     closeDatabase();
     client.destroy();
     process.exit(0);
 });
 
-client.commands = new Collection();
+// Bot ready event
+client.once('ready', () => {
+    logger.info('SYSTEM', `Logged in as ${client.user.tag}!`);
+    
+    // Load active team messages from database
+    loadTeamMessages();
+    
+    // Set up guild handlers to deploy commands
+    setupGuildHandlers(client);
+    
+    // Mark initialization as complete
+    initSystem.complete('events');
+});
 
 // Load commands
 const commandsPath = path.join(__dirname, 'commands');
@@ -48,9 +62,12 @@ for (const file of commandFiles) {
   if ('data' in command && 'execute' in command) {
     client.commands.set(command.data.name, command);
   } else {
-    console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+    logger.warn('COMMAND', `The command at ${filePath} is missing a required "data" or "execute" property.`);
   }
 }
+
+// Mark commands as loaded
+initSystem.complete('commands');
 
 // Load events
 const eventsPath = path.join(__dirname, 'events');
@@ -67,6 +84,7 @@ for (const file of eventFiles) {
   }
 }
 
+// Team voice channel updates
 client.on('voiceStateUpdate', async (oldState, newState) => {
     if (oldState.channelId !== newState.channelId) {
         if (oldState.channelId) {
@@ -78,19 +96,14 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
     }
 });
 
+// Handle interactions
 client.on('interactionCreate', async interaction => {
+    // Handle slash commands
     if (interaction.isCommand()) {
-        const command = client.commands.get(interaction.commandName);
-
-        if (!command) return;
-
-        try {
-            await command.execute(interaction);
-        } catch (error) {
-            console.error(error);
-            await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
-        }
-    } else if (interaction.isButton()) {
+        await handleCommand(interaction, client);
+    } 
+    // Handle buttons
+    else if (interaction.isButton()) {
         if (interaction.customId.startsWith('join_voice_')) {
             await handleJoinButton(interaction);
         } else if (interaction.customId.startsWith('repeat_gal_')) {
@@ -99,5 +112,8 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+// Database is ready
+initSystem.complete('database');
+
 // Login to Discord
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN || process.env.DISCORD_TOKEN);
