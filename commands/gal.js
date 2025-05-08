@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { teamMessages, userHistory } = require('../src/database/db');
+const { teamMessages, userHistory } = require('../database/db');
 
 // Cache for rank thumbnails
 const rankThumbnails = {

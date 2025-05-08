@@ -2,13 +2,11 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
-const { loadTeamMessages, updateTeamMessage, handleJoinButton, handleRepeatButton } = require('./commands/gal');
-const { closeDatabase } = require('./src/database/db');
-const initSystem = require('./src/services/initSystem');
-const { handleCommand } = require('./src/handlers/commandHandler');
-const { setupGuildHandlers } = require('./src/handlers/guildHandler');
-const logger = require('./src/utils/logger');
+const { setupProcessHandlers } = require('./utils/processHandlers');
+const initSystem = require('./services/initSystem');
+const logger = require('./utils/logger');
 
+// Create the client instance
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
@@ -18,38 +16,12 @@ const client = new Client({
     ]
 });
 
-// Initialize commands collection
+// Initialize collections
 client.commands = new Collection();
 client.guildProfiles = new Map();
 
-// Process termination handler
-process.on('SIGINT', () => {
-    logger.info('SYSTEM', 'Application shutting down...');
-    closeDatabase();
-    client.destroy();
-    process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-    logger.info('SYSTEM', 'Application terminating...');
-    closeDatabase();
-    client.destroy();
-    process.exit(0);
-});
-
-// Bot ready event
-client.once('ready', () => {
-    logger.info('SYSTEM', `Logged in as ${client.user.tag}!`);
-    
-    // Load active team messages from database
-    loadTeamMessages();
-    
-    // Set up guild handlers to deploy commands
-    setupGuildHandlers(client);
-    
-    // Mark initialization as complete
-    initSystem.complete('events');
-});
+// Set up process event handlers
+setupProcessHandlers(client);
 
 // Load commands
 const commandsPath = path.join(__dirname, 'commands');
@@ -84,36 +56,15 @@ for (const file of eventFiles) {
   }
 }
 
-// Team voice channel updates
-client.on('voiceStateUpdate', async (oldState, newState) => {
-    if (oldState.channelId !== newState.channelId) {
-        if (oldState.channelId) {
-            await updateTeamMessage(oldState.channelId, client);
-        }
-        if (newState.channelId) {
-            await updateTeamMessage(newState.channelId, client);
-        }
-    }
-});
-
-// Handle interactions
-client.on('interactionCreate', async interaction => {
-    // Handle slash commands
-    if (interaction.isCommand()) {
-        await handleCommand(interaction, client);
-    } 
-    // Handle buttons
-    else if (interaction.isButton()) {
-        if (interaction.customId.startsWith('join_voice_')) {
-            await handleJoinButton(interaction);
-        } else if (interaction.customId.startsWith('repeat_gal_')) {
-            await handleRepeatButton(interaction);
-        }
-    }
-});
-
 // Database is ready
 initSystem.complete('database');
 
 // Login to Discord
-client.login(process.env.TOKEN || process.env.DISCORD_TOKEN);
+client.login(process.env.TOKEN || process.env.DISCORD_TOKEN)
+    .then(() => {
+        logger.info('SYSTEM', 'Bot login successful');
+    })
+    .catch(error => {
+        logger.error('SYSTEM', 'Failed to login:', error);
+        process.exit(1);
+    });
