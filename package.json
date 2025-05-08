@@ -1,7 +1,7 @@
 {
   "name": "galacta",
-  "version": "1.0.0",
-  "description": "A Discord.js v14 bot template",
+  "version": "1.0.1",
+  "description": "Galacta is a Discord.js bot with SQLite storage for guild data and automatic command deployment.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
