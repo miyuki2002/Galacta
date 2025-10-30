@@ -1,4 +1,4 @@
-const { REST, Routes } = require('discord.js');
+const { REST, Routes, ChannelType, PermissionFlagsBits } = require('discord.js');
 const guildRepository = require('../database/guildRepository');
 const initSystem = require('../services/initSystem');
 const { getCommandsJson, loadCommands } = require('./commandHandler');
@@ -10,7 +10,6 @@ const logger = require('../utils/logger');
  */
 async function storeGuildInDB(guild) {
   try {
-    // Chuẩn bị dữ liệu guild để lưu trữ
     const defaultSettings = {
       welcomeChannel: null,
       moderationEnabled: true,
@@ -22,7 +21,6 @@ async function storeGuildInDB(guild) {
       exceptions: []
     };
 
-    // Lưu vào SQLite
     guildRepository.save.run(
       guild.id,
       guild.name,
@@ -34,7 +32,6 @@ async function storeGuildInDB(guild) {
       JSON.stringify(defaultXp)
     );
     
-    // Lưu cấu hình XP vào client.guildProfiles để sử dụng ở memory
     if (guild.client && guild.client.guildProfiles) {
       guild.client.guildProfiles.set(guild.id, {
         xp: defaultXp
@@ -56,7 +53,6 @@ async function storeGuildInDB(guild) {
  */
 async function removeGuildFromDB(guildId) {
   try {
-    // Xóa thông tin guild từ cơ sở dữ liệu
     guildRepository.delete.run(guildId);
     logger.info('GUILD', `Đã xóa thông tin server ID: ${guildId} khỏi SQLite`);
     return true;
@@ -72,7 +68,6 @@ async function removeGuildFromDB(guildId) {
  */
 async function getGuildFromDB(guildId) {
   try {
-    // Lấy thông tin guild từ cơ sở dữ liệu
     const guildData = guildRepository.getById.get(guildId);
     
     if (guildData) {
@@ -121,23 +116,18 @@ async function handleGuildJoin(guild, commands) {
   logger.info('GUILD', `Server hiện có ${guild.memberCount} thành viên`);
 
   try {
-    // Lưu thông tin guild vào SQLite
     await storeGuildInDB(guild);
 
-    // Đảm bảo rằng commands không rỗng
     let commandsToRegister = commands;
     if (!commandsToRegister || !commandsToRegister.length) {
-      // Nếu không có commands được truyền vào, lấy từ commandHandler
       commandsToRegister = getCommandsJson(guild.client);
 
-      // Nếu vẫn không có lệnh, hiển thị cảnh báo
       if (!commandsToRegister || !commandsToRegister.length) {
         logger.warn('GUILD', `Không có lệnh nào được tải để triển khai cho server ${guild.name}!`);
         commandsToRegister = [];
       }
     }
 
-    // Triển khai slash commands cho guild mới
     await deployCommandsToGuild(guild.id, commandsToRegister);
     logger.info('GUILD', `Đã triển khai các lệnh slash cho server: ${guild.name}`);
 
@@ -223,17 +213,23 @@ function findDefaultChannel(guild) {
 
   // 1. Tìm kênh có tên 'general' hoặc 'chung'
   let channel = guild.channels.cache.find(
-    channel => channel.type === 0 && // TextChannel
+    channel => channel.type === ChannelType.GuildText &&
     (channel.name === 'general' || channel.name === 'chung') &&
-    channel.permissionsFor(guild.members.me).has(['SendMessages', 'ViewChannel'])
+    channel.permissionsFor(guild.members.me).has([
+      PermissionFlagsBits.SendMessages,
+      PermissionFlagsBits.ViewChannel
+    ])
   );
 
   if (channel) return channel;
 
   // 2. Tìm kênh mà bot có quyền gửi tin nhắn và hiển thị
   channel = guild.channels.cache.find(
-    channel => channel.type === 0 && // TextChannel
-    channel.permissionsFor(guild.members.me).has(['SendMessages', 'ViewChannel'])
+    channel => channel.type === ChannelType.GuildText &&
+    channel.permissionsFor(guild.members.me).has([
+      PermissionFlagsBits.SendMessages,
+      PermissionFlagsBits.ViewChannel
+    ])
   );
 
   return channel; // Có thể null nếu không tìm thấy kênh phù hợp
