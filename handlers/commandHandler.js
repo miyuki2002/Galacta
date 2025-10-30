@@ -13,28 +13,21 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
     const itemPath = path.join(dir, item.name);
 
     if (item.isDirectory()) {
-      // Nếu là thư mục, đệ quy tải lệnh từ thư mục con
       loadCommandsFromDirectory(client, itemPath, commandsJson);
     } else if (item.name.endsWith('.js')) {
-      // Nếu là file .js, tải lệnh
       try {
         const command = require(itemPath);
 
-        // Kiểm tra xem có các thuộc tính bắt buộc không
         if ('data' in command && 'execute' in command) {
-          // Lấy tên lệnh từ data
           const commandName = command.data.name;
 
-          // Kiểm tra xem lệnh đã tồn tại chưa
           if (client.commands.has(commandName)) {
             logger.warn('COMMAND', `Lệnh "${commandName}" đã tồn tại và sẽ bị ghi đè bởi ${itemPath}`);
           }
 
-          // Thêm lệnh vào collection
           client.commands.set(commandName, command);
           commandsJson.push(command.data.toJSON());
 
-          // Hiển thị thông tin về thư mục chứa lệnh
           const category = path.relative(path.join(__dirname, '../commands'), dir).split(path.sep)[0] || 'root';
           // logger.debug('COMMAND', `Đã tải lệnh "${commandName}" từ danh mục "${category}"`); // Tắt hiển thị thông tin chi tiết (log quá nhiều)
         } else {
@@ -47,27 +40,21 @@ const loadCommandsFromDirectory = (client, dir, commandsJson) => {
   }
 };
 
-// Tải tất cả các tệp lệnh
 const loadCommands = (client) => {
   const commandsPath = path.join(__dirname, '../commands');
   const commandsJson = [];
 
-  // Xóa tất cả lệnh hiện tại
   client.commands.clear();
 
-  // Tải lệnh từ thư mục gốc và các thư mục con
   loadCommandsFromDirectory(client, commandsPath, commandsJson);
 
-  // Lưu vào cache
   commandsJsonCache = commandsJson;
 
-  // Hiển thị thông tin tổng quan
   logger.info('COMMAND', `Đã tải tổng cộng ${client.commands.size} lệnh từ tất cả các danh mục.`);
 
   return client.commands.size;
 };
 
-// Lấy commands dưới dạng JSON từ cache hoặc tải mới
 const getCommandsJson = (client) => {
   if (!commandsJsonCache) {
     loadCommands(client);

@@ -1,6 +1,6 @@
 {
   "name": "galacta",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Galacta is a Discord.js bot with SQLite storage for guild data and automatic command deployment.",
   "main": "index.js",
   "scripts": {
@@ -15,9 +15,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "better-sqlite3": "^8.5.2",
-    "discord.js": "^14.0.0",
-    "dotenv": "^16.0.0"
+    "better-sqlite3": "^12.4.1",
+    "discord.js": "^14.24.1",
+    "dotenv": "^17.2.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"

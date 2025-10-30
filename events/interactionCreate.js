@@ -7,7 +7,7 @@ module.exports = {
   name: Events.InteractionCreate,
   async execute(interaction) {
     // Handle slash commands
-    if (interaction.isCommand()) {
+    if (interaction.isChatInputCommand()) {
       await handleCommand(interaction, interaction.client);
     } 
     // Handle buttons
